@@ -8,7 +8,7 @@ A simple, custom bingo script written in Python, using PIL.
 4. Open the JPG file at the output path you gave to confirm the input values were used to create the board.
 
 # Requirements
-This script uses the [Pillow](https://pypi.org/project/pillow/) to write a bingo board to an image file.
+This script uses [Pillow](https://pypi.org/project/pillow/) to write a bingo board to an image file.
 
 # Additional Details
 I don't plan to update or maintain this regularly.
