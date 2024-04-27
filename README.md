@@ -15,4 +15,6 @@ I don't plan to update or maintain this regularly.
 
 This was created because other similar projects or guides I tried were too inconvenient with set up, did not display properly, was created in unfamiliar language, or was an online service.
 
-This script was pretty quickly glued together, you can probably pick out elements that I wanted to impliment, but ultimately I do not have the time for it.
+This script was pretty quickly glued together from other projects' code and guides, you can probably pick out elements that I wanted to impliment, but ultimately I do not have the time for it.
+
+As is, this script will generate an image of a simple bingo board, with each tile containing a random value from the input file.
