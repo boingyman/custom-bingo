@@ -1,0 +1,30 @@
+This file
+is a sample
+of an input
+file for
+the bingo script.
+Each line is
+a value to
+be used in
+a tile on
+the bingo board.
+The rest of
+this file will
+now just be
+filler values.
+line 15
+line 16
+line 17
+line 18
+line 19
+line 20
+line 21
+line 22
+line 23
+line 24
+line 25
+line 26
+line 27
+line 28
+line 29
+line 30
