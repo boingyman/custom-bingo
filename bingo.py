@@ -33,7 +33,7 @@ def main():
 
     input_content = None
     with open(args.i, 'r', encoding='utf-8', errors='replace') as file:
-        input_content = file.read().split
+        input_content = file.read().splitlines()
 
     if len(input_content) < (args.l ** 2):
         raise Exception(f"Input must have more than {(args.l ** 2)} values. Values are separated by new line characters.")
@@ -95,7 +95,7 @@ def main():
 
             for line in lines:
                 text_width = font.getbbox(line)[2]
-                drawing.text((pos[0][0] + (tile_area[0] - text_width) / 2, text_y_pos), line, font=font, fill=text_color)
+                drawing.text(((pos[0][0] + (tile_area[0] - text_width) / 2) + 4, text_y_pos), line, font=font, fill=text_color)
                 text_y_pos += text_height
 
         if args.n == 1:
