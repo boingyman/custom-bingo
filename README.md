@@ -4,7 +4,7 @@ A simple, custom bingo script written in Python, using PIL.
 # How to Use
 1. Transfer the bingo.py script file to your machine.
 2. Via command line, cd to the scipt's directory.
-3. Type `python bingo.py -i INPUT_FILE_PATH -o OUTPUT_PATH`, substituting INPUT_FILE_PATH and OUTPUT_PATH for your desired paths, and press enter.
+3. Type `python bingo.py input output`, substituting input and output for your desired paths, and press enter.
 4. Open the JPG file at the output path you gave to confirm the input values were used to create the board.
 
 # Requirements
