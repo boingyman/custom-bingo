@@ -1,8 +1,6 @@
 # custom-bingo
 A simple, custom bingo script written in Python, using PIL.
 
-![Sample output from script](https://github.com/boingyman/custom-bingo/blob/main/sample-output.jpg?raw=true)
-
 # How to Use
 1. Transfer the bingo.py script file to your machine.
 2. Via command line, cd to the scipt's directory.
