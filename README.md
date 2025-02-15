@@ -19,4 +19,4 @@ This was created because other similar projects or guides I tried were too incon
 
 This script was pretty quickly glued together from other projects' code and guides, you can probably pick out elements that I wanted to impliment, but ultimately I do not have the time for it.
 
-As is, this script will generate an image of a simple bingo board, with each tile containing a random value from the input file. There's additional arguments you can read on too, but nothing complex.
+As is, this script will generate an image of a simple bingo board, with each tile containing a random value from the input file. There's additional arguments you can read to customize the bingo board.
