@@ -10,6 +10,72 @@ from typing import Tuple, List, Any, Optional
 from PIL import Image, ImageDraw, ImageFont
 
 
+class BingoBoardPositioner:
+    def __init__(
+        self,
+        cell_dims: Tuple[int, int],
+        cell_counts: Tuple[int, int],
+        outline_width: int,
+        borders: Tuple[int, int, int, int],
+    ):
+        self.outline_width = outline_width
+        self.cell_counts = cell_counts
+        self.cell_dims = cell_dims
+        self.borders = borders
+        self.board_area_sans_borders = (
+            (self.outline_width * 4)
+            + (self.outline_width * (self.cell_counts[0] - 1))
+            + (self.cell_dims[0] * self.cell_counts[0]),
+            (self.outline_width * 4)
+            + (self.outline_width * (self.cell_counts[1] - 1))
+            + (self.cell_dims[1] * self.cell_counts[1]),
+        )
+        self.board_area = (
+            self.board_area_sans_borders[0] + self.borders[0] + self.borders[1],
+            self.board_area_sans_borders[1] + self.borders[2] + self.borders[3],
+        )
+        self.board_pos = [
+            (self.borders[0], self.borders[2]),
+            (
+                self.borders[0] + self.board_area_sans_borders[0] - 1,
+                self.borders[2] + self.board_area_sans_borders[1] - 1,
+            ),
+        ]
+
+    def get_rect_position_for_index(self, x: int, y: int):
+        x_pos_1 = (
+            self.borders[0]
+            + (x * self.cell_dims[0])
+            + (self.outline_width * 2)
+            + (x * self.outline_width)
+        )
+        y_pos_1 = (
+            self.borders[2]
+            + (y * self.cell_dims[1])
+            + (self.outline_width * 2)
+            + (y * self.outline_width)
+        )
+        x_pos_2 = (x_pos_1 + self.cell_dims[0]) - 1
+        y_pos_2 = (y_pos_1 + self.cell_dims[1]) - 1
+
+        return [(x_pos_1, y_pos_1), (x_pos_2, y_pos_2)]
+
+    def get_rect_position_for_1d_index(self, i: int):
+        x = i % self.cell_counts[0]
+        y = math.floor(i / self.cell_counts[0])
+
+        return self.get_rect_position_for_index(x, y)
+
+    def get_board_area(self):
+        return self.board_area
+
+    def get_board_area_sans_border(self):
+        return self.board_area_sans_borders
+
+    def get_board_pos(self):
+        return self.board_pos
+
+
 @dataclass
 class BingoGeneratorInfo:
     input_board_contents: List[str]
@@ -29,15 +95,11 @@ class BingoGeneratorInfo:
 
 @dataclass
 class BoardContent:
-    borders: (int, int, int, int)  # top, bottom, left, right
-    tile_dimensions: Tuple[float, float]
+    board_positioner: BingoBoardPositioner
     tile_content_list: List[str]
-    board_resolution: int
-    board_size: int
     free_tile: bool
     font: ImageFont.FreeTypeFont
     characters_per_line: int
-    line_width: int
 
 
 def parse_input() -> BingoGeneratorInfo:
@@ -81,15 +143,15 @@ def parse_input() -> BingoGeneratorInfo:
         "--resolution",
         dest="resolution",
         type=int,
-        default=512,
-        help="The resolution of the resulting images(s). (default: 512, type: integer)",
+        default=2048,
+        help="The preferred resolution of the resulting image. Script will determine a resolution that fits the board. (default: 512, type: integer)",
     )
     parser.add_argument(
         "-fs",
         "--font-size",
         dest="font_size",
         type=int,
-        default=13,
+        default=43,
         help="The font size for text. (default: 13, type: integer)",
     )
     parser.add_argument(
@@ -97,7 +159,7 @@ def parse_input() -> BingoGeneratorInfo:
         "--text-width",
         dest="text_width",
         type=int,
-        default=12,
+        default=15,
         help="The number of characters to try and fit on a line of text for each bingo tile. (default: 12, type: integer)",
     )
     parser.add_argument(
@@ -106,7 +168,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="border",
         type=int,
         default=10,
-        help="The amount of space around all sides of the board. (default: 10, type: integer)",
+        help="The amount of empty space around all sides of the board. (default: 10, type: integer)",
     )
     parser.add_argument(
         "-btop",
@@ -114,7 +176,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="border_top",
         type=int,
         default=None,
-        help="The amount of space placed before the top of the board. Overrides '-b/--borders' if used.",
+        help="The amount of empty space placed before the top of the board. Overrides '-b/--borders' if used.",
     )
     parser.add_argument(
         "-bleft",
@@ -122,7 +184,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="border_left",
         type=int,
         default=None,
-        help="The amount of space placed before the left of the board. Overrides '-b/--borders' if used.",
+        help="The amount of empty space placed before the left of the board. Overrides '-b/--borders' if used.",
     )
     parser.add_argument(
         "-bright",
@@ -130,7 +192,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="border_right",
         type=int,
         default=None,
-        help="The amount of space placed after the right of the board. Overrides '-b/--borders' if used.",
+        help="The amount of empty space placed after the right of the board. Overrides '-b/--borders' if used.",
     )
     parser.add_argument(
         "-bbottom",
@@ -138,7 +200,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="border_bottom",
         type=int,
         default=None,
-        help="The amount of space placed after the bottom of the board. Overrides '-b/--borders' if used.",
+        help="The amount of empty space placed after the bottom of the board. Overrides '-b/--borders' if used.",
     )
     parser.add_argument(
         "-l",
@@ -146,7 +208,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="line_width",
         type=int,
         default=5,
-        help="The width of the cell outline. (default: 5, type: integer)",
+        help="The width of the cell outline. Width is double along the borders. (default: 5, type: integer)",
     )
 
     args = parser.parse_args()
@@ -198,15 +260,33 @@ def generate(args: BingoGeneratorInfo):
     center_cell = math.floor(float(total_cells) / 2.0)
 
     board_cells_area = (
-        args.image_resolution - args.left_border_size - args.right_border_size,
-        args.image_resolution - args.top_border_size - args.bottom_border_size,
+        args.image_resolution
+        - args.left_border_size
+        - args.right_border_size
+        - (args.line_width * (args.board_size + 3)),
+        args.image_resolution
+        - args.top_border_size
+        - args.bottom_border_size
+        - (args.line_width * (args.board_size + 3)),
     )
     cell_dimensions = (
-        board_cells_area[0] / args.board_size,
-        board_cells_area[1] / args.board_size,
+        math.ceil(board_cells_area[0] / args.board_size),
+        math.ceil(board_cells_area[1] / args.board_size),
     )
 
     font = ImageFont.truetype("arial.ttf", args.font_size)
+
+    positioner = BingoBoardPositioner(
+        cell_dimensions,
+        (args.board_size, args.board_size),
+        args.line_width,
+        (
+            args.left_border_size,
+            args.right_border_size,
+            args.top_border_size,
+            args.bottom_border_size,
+        ),
+    )
 
     proc_list = []
     manager = Manager()
@@ -222,20 +302,11 @@ def generate(args: BingoGeneratorInfo):
             target=mproc_generate_board,
             args=(
                 BoardContent(
-                    (
-                        args.top_border_size,
-                        args.bottom_border_size,
-                        args.left_border_size,
-                        args.right_border_size,
-                    ),
-                    cell_dimensions,
+                    positioner,
                     cells_text,
-                    args.image_resolution,
-                    args.board_size,
                     args.free_space,
                     font,
                     args.text_char_limit,
-                    args.line_width,
                 ),
                 b,
                 return_dict,
@@ -264,46 +335,20 @@ def generate(args: BingoGeneratorInfo):
 
 
 def mproc_generate_board(contents, proc_num, return_dict):
-    img = Image.new(
-        "RGB", (contents.board_resolution, contents.board_resolution), (255, 255, 255)
-    )
 
-    class RectTilingPositioning:
-        def __init__(self, width, height, row_length, outline_width):
-            self.row_length = row_length
-            self.outline_width = outline_width
-            outline_overlap_loss = (row_length - 1) * outline_width
-            self.width = width + (outline_overlap_loss / float(self.row_length))
-            self.height = height + (outline_overlap_loss / float(self.row_length))
+    img = Image.new("RGB", contents.board_positioner.get_board_area(), (255, 255, 255))
 
-        def get_rect_position_for_index(self, index):
-            x_pos_1 = ((index % self.row_length) * self.width) - (
-                index % self.row_length * self.outline_width
-            )
-            y_pos_1 = (math.floor(index / self.row_length) * self.height) - (
-                math.floor(index / self.row_length) * self.outline_width
-            )
-            x_pos_2 = x_pos_1 + self.width - 1
-            y_pos_2 = y_pos_1 + self.height - 1
+    drawing = ImageDraw.Draw(img)
 
-            return [(x_pos_1, y_pos_1), (x_pos_2, y_pos_2)]
-
-    positioner = RectTilingPositioning(
-        contents.tile_dimensions[0],
-        contents.tile_dimensions[1],
-        contents.board_size,
-        contents.line_width,
-    )
+    drawing.rectangle(contents.board_positioner.get_board_pos(), fill="#000000")
 
     for t in range(0, len(contents.tile_content_list), 1):
-        drawing = ImageDraw.Draw(img)
 
-        pos = positioner.get_rect_position_for_index(t)
+        pos = contents.board_positioner.get_rect_position_for_1d_index(t)
 
-        pos[0] = (contents.borders[2] + pos[0][0], contents.borders[0] + pos[0][1])
-        pos[1] = (contents.borders[2] + pos[1][0], contents.borders[0] + pos[1][1])
+        cell_dimensions = (pos[1][0] - pos[0][0], pos[1][1] - pos[0][1])
 
-        drawing.rectangle(pos, width=contents.line_width, outline="#000000")
+        drawing.rectangle(pos, fill="#FFFFFF")
 
         lines = textwrap.wrap(
             contents.tile_content_list[t], contents.characters_per_line
@@ -312,14 +357,9 @@ def mproc_generate_board(contents, proc_num, return_dict):
 
         text_height = contents.font.getbbox(lines[0])[3]
 
-        # there is a bug here where the text will drift off to the side the more down and right
-        # the cells are
-        #
-        # issue is not terribly obvious on line widths <= 5 and higher resolutions
-
         text_y_pos = (
             pos[0][1]
-            + (contents.tile_dimensions[1] / 2.0)
+            + (cell_dimensions[1] / 2.0)
             - (len(lines) * (text_height / 2))
             + 1
         )
@@ -328,8 +368,7 @@ def mproc_generate_board(contents, proc_num, return_dict):
             text_width = contents.font.getbbox(line)[2]
             drawing.text(
                 (
-                    (pos[0][0] + (contents.tile_dimensions[0] / 2) - (text_width / 2))
-                    + 1,
+                    (pos[0][0] + (cell_dimensions[0] / 2) - (text_width / 2)) + 1,
                     text_y_pos,
                 ),
                 line,
