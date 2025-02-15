@@ -175,7 +175,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="size",
         type=int,
         default=5,
-        help="Size of the bingo board. Accepts odd values greater or equal to 3. (default: 5, type: integer)",
+        help="Size of the bingo board in cells, both width and height. (default: 5, type: integer)",
     )
     parser.add_argument(
         "-r",
@@ -183,7 +183,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="resolution",
         type=int,
         default=2048,
-        help="The preferred resolution of the resulting image. Script will determine a resolution that fits the board. (default: 512, type: integer)",
+        help="The preferred resolution of the resulting image. Script will determine a resolution that fits the board. (default: 2048, type: integer)",
     )
     parser.add_argument(
         "-fs",
@@ -191,7 +191,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="font_size",
         type=int,
         default=43,
-        help="The font size for text. (default: 13, type: integer)",
+        help="The font size for text. (default: 43, type: integer)",
     )
     parser.add_argument(
         "-tw",
@@ -199,7 +199,7 @@ def parse_input() -> BingoGeneratorInfo:
         dest="text_width",
         type=int,
         default=15,
-        help="The number of characters to try and fit on a line of text for each bingo tile. (default: 12, type: integer)",
+        help="The number of characters to try and fit on a line of text for each bingo tile. (default: 15, type: integer)",
     )
     parser.add_argument(
         "-b",
